@@ -1,0 +1,2945 @@
+{
+	"info": {
+		"_postman_id": "77dc96da-49d2-4a6b-b770-66cafe0e653b",
+		"name": "Clothes Shop API",
+		"description": "Complete API collection for the Clothes Shop backend.\n\n## Setup\n1. Import this collection into Postman\n2. Set the `baseUrl` variable to `http://localhost:3000` (already set)\n3. Run **[SETUP] Admin Login** first — the token is saved automatically\n4. Run scenarios top-to-bottom within each folder\n\n## Variables (auto-managed)\n- `baseUrl` — server base URL\n- `adminToken` — saved automatically after admin login\n- `sessionId` — a fixed customer session UUID\n- `createdItemId` — saved after creating a test item\n- `createdCategoryId` — saved after creating a test category\n- `orderId` — saved after placing a test order",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11453942"
+	},
+	"item": [
+		{
+			"name": "🔐 Auth",
+			"item": [
+				{
+					"name": "✅ Login – valid credentials",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has token', () => {",
+									"  const body = pm.response.json();",
+									"  pm.expect(body.token).to.be.a('string').and.not.empty;",
+									"  pm.collectionVariables.set('adminToken', body.token);",
+									"  console.log('✔ Admin token saved');",
+									"});",
+									"pm.test('Has admin object', () => {",
+									"  const body = pm.response.json();",
+									"  pm.expect(body.admin).to.have.property('username', 'admin');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Login – wrong password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));",
+									"pm.test('Error message present', () => {",
+									"  pm.expect(pm.response.json().error).to.include('Invalid');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"wrongpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Login – missing fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Logout message', () => {",
+									"  pm.expect(pm.response.json().message).to.include('Logged out');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Admin authentication endpoints"
+		},
+		{
+			"name": "📂 Categories",
+			"item": [
+				{
+					"name": "✅ List all categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Returns array', () => {",
+									"  pm.expect(pm.response.json()).to.be.an('array').with.length.greaterThan(0);",
+									"});",
+									"pm.test('Category has required fields', () => {",
+									"  const cat = pm.response.json()[0];",
+									"  pm.expect(cat).to.have.all.keys('id','name','slug','description');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Get category by ID (with items)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has items array', () => {",
+									"  pm.expect(pm.response.json().items).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/cat-001",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"cat-001"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Get category – not found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 404', () => pm.response.to.have.status(404));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/cat-does-not-exist",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"cat-does-not-exist"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ [Admin] Create category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Category created', () => {",
+									"  const body = pm.response.json();",
+									"  pm.expect(body.id).to.be.a('string');",
+									"  pm.collectionVariables.set('createdCategoryId', body.id);",
+									"  console.log('✔ Category ID saved:', body.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Swimwear\",\n  \"description\": \"Bikinis, trunks, and swimsuits\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ [Admin] Create category – duplicate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 409', () => pm.response.to.have.status(409));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Swimwear\",\n  \"description\": \"Duplicate\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ [Admin] Create category – no auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Unauthorised Category\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ [Admin] Update category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Description updated', () => {",
+									"  pm.expect(pm.response.json().description).to.include('updated');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Beach and pool wear – updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/{{createdCategoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"{{createdCategoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ [Admin] Delete category (empty)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Deleted message', () => {",
+									"  pm.expect(pm.response.json().message).to.include('deleted');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/{{createdCategoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"{{createdCategoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ [Admin] Delete category – has items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 409', () => pm.response.to.have.status(409));",
+									"pm.test('Cannot delete message', () => {",
+									"  pm.expect(pm.response.json().error).to.include('Cannot delete');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/cat-001",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"cat-001"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Category listing (public) and management (admin)"
+		},
+		{
+			"name": "👕 Items",
+			"item": [
+				{
+					"name": "✅ List all items (default sort: popular)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has pagination fields', () => {",
+									"  const body = pm.response.json();",
+									"  pm.expect(body).to.have.all.keys('items','total','page','limit','pages');",
+									"});",
+									"pm.test('items is array', () => {",
+									"  pm.expect(pm.response.json().items).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Filter items by category slug",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('All items are shirts', () => {",
+									"  pm.response.json().items.forEach(i => {",
+									"    pm.expect(i.categoryId).to.equal('cat-001');",
+									"  });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items?category=shirts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "shirts"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Search items by keyword",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Results contain keyword', () => {",
+									"  pm.response.json().items.forEach(i => {",
+									"    const match = i.name.toLowerCase().includes('jeans') || i.description.toLowerCase().includes('jeans');",
+									"    pm.expect(match).to.be.true;",
+									"  });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items?search=jeans",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "jeans"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Sort items by price ascending",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Items sorted price asc', () => {",
+									"  const items = pm.response.json().items;",
+									"  for (let i = 1; i < items.length; i++) {",
+									"    pm.expect(items[i].price).to.be.at.least(items[i-1].price);",
+									"  }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items?sort=price_asc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							],
+							"query": [
+								{
+									"key": "sort",
+									"value": "price_asc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Sort items by price descending",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Items sorted price desc', () => {",
+									"  const items = pm.response.json().items;",
+									"  for (let i = 1; i < items.length; i++) {",
+									"    pm.expect(items[i].price).to.be.at.most(items[i-1].price);",
+									"  }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items?sort=price_desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							],
+							"query": [
+								{
+									"key": "sort",
+									"value": "price_desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Paginate items (page 1, limit 2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Returns max 2 items', () => {",
+									"  pm.expect(pm.response.json().items.length).to.be.at.most(2);",
+									"});",
+									"pm.test('Page is 1', () => {",
+									"  pm.expect(pm.response.json().page).to.equal(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items?page=1&limit=2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Get popular items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+									"pm.test('Sorted by orderCount desc', () => {",
+									"  const items = pm.response.json();",
+									"  for (let i = 1; i < items.length; i++) {",
+									"    pm.expect(items[i].orderCount).to.be.at.most(items[i-1].orderCount);",
+									"  }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items?limit=3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Get single item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has category object', () => {",
+									"  pm.expect(pm.response.json().category).to.be.an('object');",
+									"});",
+									"pm.test('ID matches', () => {",
+									"  pm.expect(pm.response.json().id).to.equal('item-001');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items/item-001",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items",
+								"item-001"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Get single item – not found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 404', () => pm.response.to.have.status(404));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items/item-does-not-exist",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items",
+								"item-does-not-exist"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ [Admin] Create item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Item created and ID saved', () => {",
+									"  const body = pm.response.json();",
+									"  pm.expect(body.id).to.be.a('string');",
+									"  pm.collectionVariables.set('createdItemId', body.id);",
+									"  console.log('✔ Item ID saved:', body.id);",
+									"});",
+									"pm.test('orderCount starts at 0', () => {",
+									"  pm.expect(pm.response.json().orderCount).to.equal(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Summer Linen Shirt\",\n  \"description\": \"Breathable linen shirt for warm days.\",\n  \"price\": 54.99,\n  \"categoryId\": \"cat-001\",\n  \"sizes\": [\"S\",\"M\",\"L\",\"XL\"],\n  \"colors\": [\"Beige\",\"Sky Blue\"],\n  \"stock\": 30,\n  \"imageUrl\": \"https://example.com/images/linen-shirt.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ [Admin] Create item – missing required fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Incomplete Item\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ [Admin] Create item – invalid categoryId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));",
+									"pm.test('Category error', () => {",
+									"  pm.expect(pm.response.json().error).to.include('categoryId');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ghost Item\",\n  \"price\": 10,\n  \"categoryId\": \"cat-fake-999\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ [Admin] Update item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Price updated', () => {",
+									"  pm.expect(pm.response.json().price).to.equal(49.99);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"price\": 49.99,\n  \"description\": \"Updated – Now even better breathable linen.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/items/{{createdItemId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items",
+								"{{createdItemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ [Admin] Quick stock adjustment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Stock updated to 5', () => {",
+									"  pm.expect(pm.response.json().stock).to.equal(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"stock\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/items/{{createdItemId}}/stock",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items",
+								"{{createdItemId}}",
+								"stock"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ [Admin] Delete item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Item deleted', () => {",
+									"  pm.expect(pm.response.json().message).to.include('deleted');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/items/{{createdItemId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items",
+								"{{createdItemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ [Admin] Delete item – not found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 404', () => pm.response.to.have.status(404));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/items/{{createdItemId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items",
+								"{{createdItemId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Product browsing (public) and management (admin)"
+		},
+		{
+			"name": "🛒 Cart",
+			"item": [
+				{
+					"name": "✅ View empty cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Cart is empty or has items array', () => {",
+									"  pm.expect(pm.response.json().items).to.be.an('array');",
+									"});",
+									"pm.test('Has subtotal', () => {",
+									"  pm.expect(pm.response.json()).to.have.property('subtotal');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Add item to cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Item in cart', () => {",
+									"  const items = pm.response.json().items;",
+									"  pm.expect(items.length).to.be.greaterThan(0);",
+									"  pm.expect(items[0].itemId).to.equal('item-001');",
+									"});",
+									"pm.test('Subtotal > 0', () => {",
+									"  pm.expect(pm.response.json().subtotal).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"itemId\": \"item-001\",\n  \"quantity\": 2,\n  \"size\": \"M\",\n  \"color\": \"White\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Add second different item to cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Cart has 2 line items', () => {",
+									"  pm.expect(pm.response.json().items.length).to.equal(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"itemId\": \"item-002\",\n  \"quantity\": 1,\n  \"size\": \"32\",\n  \"color\": \"Dark Blue\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Add same item again (quantity merges)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Item-001 quantity is now 3', () => {",
+									"  const item = pm.response.json().items.find(i => i.itemId === 'item-001' && i.size === 'M');",
+									"  pm.expect(item.quantity).to.equal(3);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"itemId\": \"item-001\",\n  \"quantity\": 1,\n  \"size\": \"M\",\n  \"color\": \"White\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Add item – missing itemId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Add item – non-existent item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 404', () => pm.response.to.have.status(404));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"itemId\": \"item-fake-999\",\n  \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Add item – no session header",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));",
+									"pm.test('Session header error', () => {",
+									"  pm.expect(pm.response.json().error).to.include('X-Session-Id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"itemId\": \"item-001\",\n  \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Update item quantity in cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Quantity updated to 1', () => {",
+									"  const item = pm.response.json().items.find(i => i.itemId === 'item-001' && i.size === 'M');",
+									"  pm.expect(item.quantity).to.equal(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 1,\n  \"size\": \"M\",\n  \"color\": \"White\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/item-001",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"item-001"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Remove item from cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('item-002 is gone from cart', () => {",
+									"  const found = pm.response.json().items.find(i => i.itemId === 'item-002');",
+									"  pm.expect(found).to.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart?size=32&color=Dark Blue",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							],
+							"query": [
+								{
+									"key": "size",
+									"value": "32"
+								},
+								{
+									"key": "color",
+									"value": "Dark Blue"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Clear entire cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Cart cleared', () => {",
+									"  pm.expect(pm.response.json().message).to.include('cleared');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Customer shopping cart. All requests require X-Session-Id header."
+		},
+		{
+			"name": "📦 Orders",
+			"item": [
+				{
+					"name": "──── Customer Flow ────",
+					"item": [
+						{
+							"name": "[SETUP] Re-add items to cart before ordering",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 201 – cart ready', () => pm.response.to.have.status(201));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Session-Id",
+										"value": "{{sessionId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"itemId\": \"item-003\",\n  \"quantity\": 1,\n  \"size\": \"M\",\n  \"color\": \"Floral Green\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/cart",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"cart"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "❌ Place order – empty cart",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// Uses a fresh session that has no cart",
+											"pm.variables.set('emptySession', 'empty-cart-session-xyz');"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 400', () => pm.response.to.have.status(400));",
+											"pm.test('Cart empty error', () => {",
+											"  pm.expect(pm.response.json().error).to.include('Cart is empty');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Session-Id",
+										"value": "empty-cart-session-xyz"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"customerName\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"shippingAddress\": {\n    \"line1\": \"123 Main St\",\n    \"city\": \"Amsterdam\",\n    \"country\": \"Netherlands\",\n    \"zip\": \"1011AB\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "❌ Place order – missing shipping fields",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 400', () => pm.response.to.have.status(400));",
+											"pm.test('shippingAddress error', () => {",
+											"  pm.expect(pm.response.json().error).to.include('shippingAddress');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Session-Id",
+										"value": "{{sessionId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"customerName\": \"Jane Doe\",\n  \"email\": \"jane@example.com\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ Place order – success",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 201', () => pm.response.to.have.status(201));",
+											"pm.test('Order placed message', () => {",
+											"  pm.expect(pm.response.json().message).to.include('Order placed');",
+											"});",
+											"pm.test('Has orderId', () => {",
+											"  const body = pm.response.json();",
+											"  pm.expect(body.orderId).to.be.a('string');",
+											"  pm.collectionVariables.set('orderId', body.orderId);",
+											"  console.log('✔ Order ID saved:', body.orderId);",
+											"});",
+											"pm.test('Status is confirmed', () => {",
+											"  pm.expect(pm.response.json().status).to.equal('confirmed');",
+											"});",
+											"pm.test('Has total amount', () => {",
+											"  pm.expect(pm.response.json().total).to.be.a('number').and.greaterThan(0);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Session-Id",
+										"value": "{{sessionId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"customerName\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"shippingAddress\": {\n    \"line1\": \"123 Main St\",\n    \"city\": \"Amsterdam\",\n    \"country\": \"Netherlands\",\n    \"zip\": \"1011AB\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ Track order by ID",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 200', () => pm.response.to.have.status(200));",
+											"pm.test('Has tracking fields', () => {",
+											"  const body = pm.response.json();",
+											"  pm.expect(body).to.have.all.keys('orderId','status','placedAt','estimatedDelivery','items','total');",
+											"});",
+											"pm.test('No private customer data exposed', () => {",
+											"  const body = pm.response.json();",
+											"  pm.expect(body).to.not.have.property('email');",
+											"  pm.expect(body).to.not.have.property('sessionId');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/orders/track/{{orderId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders",
+										"track",
+										"{{orderId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "❌ Track order – not found",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 404', () => pm.response.to.have.status(404));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/orders/track/order-does-not-exist",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders",
+										"track",
+										"order-does-not-exist"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "❌ Place order again – cart now empty (auto-cleared)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 400 – cart cleared after order', () => pm.response.to.have.status(400));",
+											"pm.test('Cart empty error', () => {",
+											"  pm.expect(pm.response.json().error).to.include('Cart is empty');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Session-Id",
+										"value": "{{sessionId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"customerName\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"shippingAddress\": {\n    \"line1\": \"123 Main St\",\n    \"city\": \"Amsterdam\",\n    \"country\": \"Netherlands\",\n    \"zip\": \"1011AB\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "──── Admin Order Management ────",
+					"item": [
+						{
+							"name": "✅ [Admin] List all orders",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 200', () => pm.response.to.have.status(200));",
+											"pm.test('Has orders array and pagination', () => {",
+											"  const body = pm.response.json();",
+											"  pm.expect(body.orders).to.be.an('array');",
+											"  pm.expect(body).to.have.property('total');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ [Admin] Filter orders by status",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 200', () => pm.response.to.have.status(200));",
+											"pm.test('All returned orders are confirmed', () => {",
+											"  pm.response.json().orders.forEach(o => {",
+											"    pm.expect(o.status).to.equal('confirmed');",
+											"  });",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/orders?status=confirmed",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "confirmed"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ [Admin] Get single order detail",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 200', () => pm.response.to.have.status(200));",
+											"pm.test('Order has all fields including email', () => {",
+											"  const o = pm.response.json();",
+											"  pm.expect(o).to.have.property('email');",
+											"  pm.expect(o).to.have.property('shippingAddress');",
+											"  pm.expect(o).to.have.property('sessionId');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/orders/{{orderId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders",
+										"{{orderId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ [Admin] Update order status → processing",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 200', () => pm.response.to.have.status(200));",
+											"pm.test('Status is processing', () => {",
+											"  pm.expect(pm.response.json().order.status).to.equal('processing');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"processing\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/orders/{{orderId}}/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders",
+										"{{orderId}}",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ [Admin] Update order status → shipped",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 200', () => pm.response.to.have.status(200));",
+											"pm.test('Status is shipped', () => {",
+											"  pm.expect(pm.response.json().order.status).to.equal('shipped');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"shipped\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/orders/{{orderId}}/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders",
+										"{{orderId}}",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ [Admin] Update order status → delivered",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 200', () => pm.response.to.have.status(200));",
+											"pm.test('Status is delivered', () => {",
+											"  pm.expect(pm.response.json().order.status).to.equal('delivered');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"delivered\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/orders/{{orderId}}/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders",
+										"{{orderId}}",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "❌ [Admin] Update status – invalid value",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 400', () => pm.response.to.have.status(400));",
+											"pm.test('Validation error', () => {",
+											"  pm.expect(pm.response.json().error).to.include('status must be');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"flying\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/orders/{{orderId}}/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders",
+										"{{orderId}}",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "❌ [Admin] Get order – no auth",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status 401', () => pm.response.to.have.status(401));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"orders"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"description": "Customer ordering flow and admin order management"
+		},
+		{
+			"name": "🛠️ Admin Dashboard",
+			"item": [
+				{
+					"name": "✅ Get dashboard stats",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has all stat fields', () => {",
+									"  const body = pm.response.json();",
+									"  pm.expect(body).to.have.property('totalItems');",
+									"  pm.expect(body).to.have.property('totalCategories');",
+									"  pm.expect(body).to.have.property('totalOrders');",
+									"  pm.expect(body).to.have.property('totalRevenue');",
+									"  pm.expect(body).to.have.property('ordersByStatus');",
+									"  pm.expect(body).to.have.property('lowStockItems');",
+									"  pm.expect(body).to.have.property('topItems');",
+									"});",
+									"pm.test('totalRevenue is a number', () => {",
+									"  pm.expect(pm.response.json().totalRevenue).to.be.a('number');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/dashboard",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"dashboard"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ List all items (admin view)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Filter admin items – low stock (≤10)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('All items have stock ≤ 10', () => {",
+									"  pm.response.json().forEach(i => {",
+									"    pm.expect(i.stock).to.be.at.most(10);",
+									"  });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/items?lowStock=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"items"
+							],
+							"query": [
+								{
+									"key": "lowStock",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Bulk insert items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('2 items created', () => {",
+									"  pm.expect(pm.response.json().items.length).to.equal(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    {\n      \"name\": \"Bulk Item – Polo Shirt\",\n      \"description\": \"Classic polo in multiple colours.\",\n      \"price\": 34.99,\n      \"categoryId\": \"cat-001\",\n      \"sizes\": [\"S\",\"M\",\"L\"],\n      \"colors\": [\"Red\",\"Navy\"],\n      \"stock\": 50\n    },\n    {\n      \"name\": \"Bulk Item – Cargo Pants\",\n      \"description\": \"Multi-pocket cargo trousers.\",\n      \"price\": 64.99,\n      \"categoryId\": \"cat-002\",\n      \"sizes\": [\"30\",\"32\",\"34\"],\n      \"colors\": [\"Khaki\",\"Black\"],\n      \"stock\": 25\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/items/bulk",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"items",
+								"bulk"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Bulk insert – empty array",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/items/bulk",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"items",
+								"bulk"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Get recent orders (admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/orders?limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"orders"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Change admin password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Password changed message', () => {",
+									"  pm.expect(pm.response.json().message).to.include('Password updated');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"admin123\",\n  \"newPassword\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Change admin password – wrong current",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));",
+									"pm.test('Wrong password error', () => {",
+									"  pm.expect(pm.response.json().error).to.include('incorrect');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"totally-wrong\",\n  \"newPassword\": \"newpass456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Dashboard – expired / invalid token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer this.is.not.a.valid.token"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/dashboard",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"dashboard"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Admin-only dashboard stats, bulk operations, and account management"
+		},
+		{
+			"name": "🧪 Edge Cases & Security",
+			"item": [
+				{
+					"name": "❌ Unknown route → 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 404', () => pm.response.to.have.status(404));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/does-not-exist",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"does-not-exist"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Admin route with customer session (no Bearer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/dashboard",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"dashboard"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Health check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('API is running', () => {",
+									"  pm.expect(pm.response.json().status).to.equal('ok');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Items – unknown category returns empty",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Empty items array', () => {",
+									"  pm.expect(pm.response.json().items).to.be.an('array').with.length(0);",
+									"  pm.expect(pm.response.json().total).to.equal(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/items?category=nonexistent-category",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"items"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "nonexistent-category"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Cart – update qty of item not in cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 404', () => pm.response.to.have.status(404));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Session-Id",
+								"value": "{{sessionId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/item-999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"item-999"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Cross-cutting security and edge-case scenarios"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sessionId",
+			"value": "test-session-abc-12345",
+			"type": "string"
+		},
+		{
+			"key": "createdItemId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "createdCategoryId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "orderId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

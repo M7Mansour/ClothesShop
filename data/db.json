@@ -1,0 +1,243 @@
+{
+  "admins": [
+    {
+      "id": "admin-001",
+      "username": "admin",
+      "password": "admin123",
+      "name": "Shop Admin"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-001",
+      "name": "Shirts",
+      "slug": "shirts",
+      "description": "Casual and formal shirts"
+    },
+    {
+      "id": "cat-002",
+      "name": "Pants",
+      "slug": "pants",
+      "description": "Jeans, chinos, and trousers"
+    },
+    {
+      "id": "cat-003",
+      "name": "Dresses",
+      "slug": "dresses",
+      "description": "Elegant and casual dresses"
+    },
+    {
+      "id": "cat-004",
+      "name": "Jackets",
+      "slug": "jackets",
+      "description": "Coats, blazers, and hoodies"
+    },
+    {
+      "id": "cat-005",
+      "name": "Shoes",
+      "slug": "shoes",
+      "description": "Sneakers, boots, and sandals"
+    },
+    {
+      "id": "cat-006",
+      "name": "Accessory",
+      "slug": "accessory",
+      "description": "Bags, hats, and more"
+    }
+  ],
+  "items": [
+    {
+      "id": "item-001",
+      "name": "Classic White Oxford Shirt",
+      "description": "Crisp cotton Oxford button-down, perfect for any occasion.",
+      "price": 49.99,
+      "categoryId": "cat-001",
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "colors": [
+        "White",
+        "Light Blue"
+      ],
+      "stock": 80,
+      "imageUrl": "https://example.com/images/white-oxford.jpg",
+      "orderCount": 320,
+      "createdAt": "2024-01-10T08:00:00.000Z"
+    },
+    {
+      "id": "item-002",
+      "name": "Slim-Fit Dark Jeans",
+      "description": "Stretch denim, tapered leg, versatile dark wash.",
+      "price": 69.99,
+      "categoryId": "cat-002",
+      "sizes": [
+        "28",
+        "30",
+        "32",
+        "34",
+        "36"
+      ],
+      "colors": [
+        "Dark Blue",
+        "Black"
+      ],
+      "stock": 55,
+      "imageUrl": "https://example.com/images/slim-jeans.jpg",
+      "orderCount": 510,
+      "createdAt": "2024-01-12T08:00:00.000Z"
+    },
+    {
+      "id": "item-003",
+      "name": "Floral Wrap Dress",
+      "description": "Lightweight chiffon wrap dress with botanical print.",
+      "price": 59.99,
+      "categoryId": "cat-003",
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        "Floral Green",
+        "Floral Pink"
+      ],
+      "stock": 39,
+      "imageUrl": "https://example.com/images/wrap-dress.jpg",
+      "orderCount": 276,
+      "createdAt": "2024-02-05T08:00:00.000Z"
+    },
+    {
+      "id": "item-004",
+      "name": "Leather Biker Jacket",
+      "description": "Genuine leather, asymmetric zip, quilted shoulders.",
+      "price": 149.99,
+      "categoryId": "cat-004",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        "Black",
+        "Brown"
+      ],
+      "stock": 20,
+      "imageUrl": "https://example.com/images/biker-jacket.jpg",
+      "orderCount": 190,
+      "createdAt": "2024-02-20T08:00:00.000Z"
+    },
+    {
+      "id": "item-005",
+      "name": "White Canvas Sneakers",
+      "description": "Clean everyday sneaker in vulcanized canvas.",
+      "price": 44.99,
+      "categoryId": "cat-005",
+      "sizes": [
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "colors": [
+        "White",
+        "Off-White"
+      ],
+      "stock": 100,
+      "imageUrl": "https://example.com/images/canvas-sneakers.jpg",
+      "orderCount": 640,
+      "createdAt": "2024-03-01T08:00:00.000Z"
+    },
+    {
+      "id": "item-b89fc2ea",
+      "name": "Bulk Item – Polo Shirt",
+      "description": "Classic polo in multiple colours.",
+      "price": 34.99,
+      "categoryId": "cat-001",
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "colors": [
+        "Red",
+        "Navy"
+      ],
+      "stock": 50,
+      "imageUrl": "",
+      "orderCount": 0,
+      "createdAt": "2026-05-08T11:42:58.657Z"
+    },
+    {
+      "id": "item-c9fa48ad",
+      "name": "Bulk Item – Cargo Pants",
+      "description": "Multi-pocket cargo trousers.",
+      "price": 64.99,
+      "categoryId": "cat-002",
+      "sizes": [
+        "30",
+        "32",
+        "34"
+      ],
+      "colors": [
+        "Khaki",
+        "Black"
+      ],
+      "stock": 25,
+      "imageUrl": "",
+      "orderCount": 0,
+      "createdAt": "2026-05-08T11:42:58.657Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "order-8a0a570a",
+      "sessionId": "test-session-abc-12345",
+      "customerName": "Jane Doe",
+      "email": "jane@example.com",
+      "shippingAddress": {
+        "line1": "123 Main St",
+        "city": "Amsterdam",
+        "country": "Netherlands",
+        "zip": "1011AB"
+      },
+      "items": [
+        {
+          "itemId": "item-003",
+          "name": "Floral Wrap Dress",
+          "price": 59.99,
+          "imageUrl": "https://example.com/images/wrap-dress.jpg",
+          "size": "M",
+          "color": "Floral Green",
+          "quantity": 1
+        }
+      ],
+      "subtotal": 59.99,
+      "shipping": 7.99,
+      "tax": 4.8,
+      "total": 72.78,
+      "status": "delivered",
+      "placedAt": "2026-05-08T11:40:04.020Z",
+      "updatedAt": "2026-05-08T11:41:23.670Z"
+    }
+  ],
+  "carts": {
+    "test-session-abc-12345": {
+      "items": [],
+      "updatedAt": "2026-05-08T11:40:04.020Z"
+    }
+  }
+}
