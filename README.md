@@ -15,7 +15,7 @@ npm start          # production
 npm run dev        # development (auto-reload with nodemon)
 ```
 
-Server runs at **http://localhost:3000**
+Server runs at **http://localhost:3001**
 
 ---
 
